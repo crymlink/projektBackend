@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { count } from 'console';
 import { Model } from 'mongoose';
@@ -16,51 +16,147 @@ export class SessionService {
   ) {}
 
   async create(createSessionDto: CreateSessionDto): Promise<Session> {
+    console.log(createSessionDto);
     const createdSession = new this.sessionModel(createSessionDto);
-    createdSession.session_id = 'somethingUnique';
-    return createdSession.save();
+    return await createdSession.save();
   }
 
   async login(schueler: Schueler, id: string) {
-    console.log(id);
     const session = await this.findOne(id);
     if (session) {
       session.schuelerList.push(schueler);
       const counter: number = session.schuelerList.length;
       session.save();
-      console.log(session.schuelerList[counter - 1]);
       return session.schuelerList[counter - 1];
+    } else {
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }
 
   async setEditErgebnis(
     schuelerId: string,
-    ergebnisId: string,
     sessionId: string,
     gruppenId: string,
     teilAufgabeId: string,
   ) {
-    // let found = false;
     const session = await this.findOne(sessionId);
-    /*
+
+    if (session) {
+      session.gruppenList = session.gruppenList.map((gruppe) => {
+        if (gruppe._id.toString() === gruppenId) {
+          if (gruppe.ergebnisse) {
+            gruppe.ergebnisse = gruppe.ergebnisse.map((ergebnis) => {
+              if (ergebnis.teilAufgabeId.toString() === teilAufgabeId) {
+                if (!ergebnis.getEditedFrom) {
+                  ergebnis.getEditedFrom = schuelerId;
+                }
+              }
+              return ergebnis;
+            });
+          }
+        }
+        return gruppe;
+      });
+    }
+    return await session.save();
+  }
+
+  async loadOrCreateErgebnis(
+    schuelerId: string,
+    sessionId: string,
+    gruppenId: string,
+    teilAufgabeId: string,
+  ) {
+    const session = await this.findOne(sessionId);
+    let foundErgebnis: Ergebnis;
+    let createdErgebnis: Ergebnis;
+
+    if (session) {
+      session.gruppenList = session.gruppenList.map((gruppe) => {
+        if (gruppe._id.toString() === gruppenId) {
+          console.log(gruppenId);
+          if (gruppe.ergebnisse) {
+            gruppe.ergebnisse.map((ergebnis) => {
+              if (ergebnis.teilAufgabeId.toString() === teilAufgabeId) {
+                foundErgebnis = ergebnis;
+              }
+            });
+          }
+          if (!foundErgebnis) {
+            createdErgebnis = {
+              teilAufgabeId: teilAufgabeId,
+              getEditedFrom: '',
+              text: '',
+            };
+            gruppe.ergebnisse.push(createdErgebnis);
+            createdErgebnis = gruppe.ergebnisse[gruppe.ergebnisse.length - 1];
+          }
+        }
+        return gruppe;
+      });
+      if (!foundErgebnis) {
+        console.log('created');
+        await session.save();
+        return createdErgebnis;
+      } else {
+        console.log('found');
+        return foundErgebnis;
+      }
+    }
+  }
+
+  async saveErgebnis(
+    schuelerId: string,
+    sessionId: string,
+    gruppenId: string,
+    teilAufgabeId: string,
+    text: string,
+  ) {
+    const session = await this.findOne(sessionId);
+
+    if (session) {
+      session.gruppenList = session.gruppenList.map((gruppe) => {
+        if (gruppe._id.toString() === gruppenId) {
+          if (gruppe.ergebnisse) {
+            gruppe.ergebnisse = gruppe.ergebnisse.map((ergebnis) => {
+              if (ergebnis.teilAufgabeId.toString() === teilAufgabeId) {
+                if (ergebnis.getEditedFrom?.toString() === schuelerId) {
+                  console.log(text);
+                  console.log('hallo');
+                  ergebnis.text = text;
+                  ergebnis.getEditedFrom = null;
+                }
+              }
+              return ergebnis;
+            });
+          }
+        }
+        return gruppe;
+      });
+    }
+    return await session.save();
+  }
+
+  /*
+  async findErgebnisToTeilaufgabe(
+    sessionId: string,
+    teilAufgabeId: string,
+    gruppenId: string,
+    something: ,
+  ) {
+    const session = await this.findOne(sessionId);
+
     if (session) {
       session.gruppenList.forEach((gruppe) => {
         if (gruppe._id === gruppenId) {
           if (gruppe.ergebnisse) {
-            gruppe.ergebnisse.forEach((ergebnis) => {
-              if ((ergebnis.teilAufgabeId = teilAufgabeId)) {
-                found = true;
-                ergebnis.getEditedFrom = schuelerId;
-              }
-            });
-            if (found === false) {
-            }
+            gruppe.ergebnisse.forEach((ergebnis) => {});
           }
         }
       });
     }
-    */
   }
+  */
 
   async loadErgebnis(
     sessionId: string,
@@ -115,7 +211,15 @@ export class SessionService {
       if (createSessionDto.themenList) {
         foundSession.themenList = createSessionDto.themenList;
       }
-      return foundSession.save();
+      if (createSessionDto.phase) {
+        foundSession.phase = createSessionDto.phase;
+      }
+      if (createSessionDto.banNames) {
+        foundSession.banNames = createSessionDto.banNames;
+      }
+      const something = await foundSession.save();
+      console.log(something.gruppenList);
+      return await foundSession.save();
     }
   }
 

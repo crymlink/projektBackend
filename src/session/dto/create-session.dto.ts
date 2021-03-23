@@ -15,4 +15,6 @@ export class CreateSessionDto {
   readonly hinweisList: Hinweise[];
   readonly themenList: Themen[];
   readonly adminPW: string;
+  readonly phase: string;
+  readonly banNames: string[];
 }

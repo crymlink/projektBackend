@@ -33,6 +33,10 @@ export class Session {
   themenList: Themen[];
   @Prop()
   adminPW: string;
+  @Prop()
+  phase: string;
+  @Prop()
+  banNames: string[];
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);
