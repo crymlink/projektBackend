@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { Session } from './schemas/session.schema';
+import { Schueler } from 'src/interface/schueler.class';
 
 @Controller('session')
 export class SessionController {
@@ -9,13 +10,17 @@ export class SessionController {
 
   @Post()
   async create(@Body() createSessionDto: CreateSessionDto) {
-    await this.sessionService.create(createSessionDto);
+    return await this.sessionService.create(createSessionDto);
   }
 
   @Patch(':id')
   async edit(@Param() params, @Body() createSessionDto: CreateSessionDto) {
-    console.log('test');
-    await this.sessionService.edit(createSessionDto, params.id);
+    return await this.sessionService.edit(createSessionDto, params.id);
+  }
+
+  @Post(':id')
+  async login(@Param() params, @Body() schueler: Schueler) {
+    return await this.sessionService.login(schueler, params.id);
   }
 
   @Get()

@@ -1,7 +1,7 @@
 import { Schema } from 'mongoose';
 
 export class Aufgaben {
-  fragestellung: string;
+  fragestellung?: string;
 }
 
 export const aufgabenSchema = new Schema({

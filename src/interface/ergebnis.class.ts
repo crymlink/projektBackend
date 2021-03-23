@@ -3,11 +3,13 @@ import { Gruppe, gruppeSchema } from './gruppe.class';
 import { Teilaufgaben, teilaufgabenSchema } from './teilaufgaben.class';
 
 export class Ergebnis {
-  temporalGruppeId?: number;
+  teilAufgabeId?: string;
   text?: string;
+  getEditedFrom?: string;
 }
 
 export const ergebnisSchema = new Schema({
-  temporalGruppeId: Number,
+  teilAufgabeId: String,
   text: String,
+  getEditedFrom: String,
 });
